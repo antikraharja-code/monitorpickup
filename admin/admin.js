@@ -7,22 +7,28 @@ function getData() {
   return JSON.parse(localStorage.getItem(key)) || [];
 }
 
-function loadKurirFilter() {
-  const data = getData();
-  const kurirSet = [...new Set(data.map(d => d.kurir))];
+function buildKurirFilter(data) {
+  const current = filterKurir.value;
+  const kurirSet = [...new Set(data.map(d => d.kurir).filter(Boolean))];
+
   filterKurir.innerHTML = '<option value="">Semua Kurir</option>';
+
   kurirSet.forEach(k => {
     const o = document.createElement("option");
     o.value = k;
     o.textContent = k;
     filterKurir.appendChild(o);
   });
+
+  filterKurir.value = current;
 }
 
 function renderTable() {
   const data = getData();
   tbody.innerHTML = "";
   rekapDiv.textContent = "";
+
+  buildKurirFilter(data);
 
   const fk = filterKurir.value;
   const ta = tglAwal.value;
@@ -31,8 +37,8 @@ function renderTable() {
   const filtered = data.filter(d => {
     let ok = true;
     if (fk && d.kurir !== fk) ok = false;
-    if (ta && new Date(d.tanggal) < new Date(ta)) ok = false;
-    if (tb && new Date(d.tanggal) > new Date(tb)) ok = false;
+    if (ta && new Date(d.tanggal.split('/').reverse().join('-')) < new Date(ta)) ok = false;
+    if (tb && new Date(d.tanggal.split('/').reverse().join('-')) > new Date(tb)) ok = false;
     return ok;
   });
 
@@ -58,7 +64,7 @@ function rekapHarian() {
     map[d.tanggal] = (map[d.tanggal] || 0) + 1;
   });
 
-  rekapDiv.innerHTML = "Rekap Harian:<br>";
+  rekapDiv.innerHTML = "<b>Rekap Harian:</b><br>";
   for (let t in map) {
     rekapDiv.innerHTML += `${t} : ${map[t]} pickup<br>`;
   }
@@ -72,7 +78,7 @@ function rekapBulanan() {
     map[bln] = (map[bln] || 0) + 1;
   });
 
-  rekapDiv.innerHTML = "Rekap Bulanan:<br>";
+  rekapDiv.innerHTML = "<b>Rekap Bulanan:</b><br>";
   for (let b in map) {
     rekapDiv.innerHTML += `${b} : ${map[b]} pickup<br>`;
   }
@@ -80,12 +86,8 @@ function rekapBulanan() {
 
 /* REALTIME */
 window.addEventListener("storage", e => {
-  if (e.key === key) {
-    loadKurirFilter();
-    renderTable();
-  }
+  if (e.key === key) renderTable();
 });
 
-loadKurirFilter();
 renderTable();
 setInterval(renderTable, 1000);
