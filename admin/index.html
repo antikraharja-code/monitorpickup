@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Monitoring Pickup</title>
+<style>
+body{font-family:Arial;padding:10px}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #ccc;padding:6px;font-size:13px}
+</style>
+</head>
+<body>
+
+<h3>MONITOR PICKUP KURIR</h3>
+<div id="jam"></div>
+
+<table>
+<thead>
+<tr>
+<th>TGL</th>
+<th>KURIR</th>
+<th>ID</th>
+<th>PELANGGAN</th>
+<th>LOKASI</th>
+<th>SERVICE</th>
+<th>PICKUP</th>
+<th>SELESAI</th>
+<th>STAMP</th>
+</tr>
+</thead>
+<tbody id="data"></tbody>
+</table>
+
+<script>
+setInterval(()=>jam.innerText=new Date().toLocaleString(),1000);
+
+const pickup = JSON.parse(localStorage.getItem("pickup")||"[]");
+pickup.forEach(d=>{
+  data.innerHTML+=`
+  <tr>
+    <td>${d.tgl}</td>
+    <td>${d.kurir}</td>
+    <td>${d.id}</td>
+    <td>${d.pelanggan}</td>
+    <td>${d.lokasi}</td>
+    <td>${d.service}</td>
+    <td>${d.pickup}</td>
+    <td>${d.selesai}</td>
+    <td>${d.stamp}</td>
+  </tr>`;
+});
+</script>
+
+</body>
+</html>
