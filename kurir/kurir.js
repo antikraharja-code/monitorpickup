@@ -6,7 +6,7 @@ function loadCustomers() {
     .then(res => res.json())
     .then(data => {
       customers = data;
-      renderCustomers(data);
+      renderCustomers(customers);
     });
 }
 
@@ -14,14 +14,15 @@ function renderCustomers(list) {
   const sel = document.getElementById("pelanggan");
   sel.innerHTML = "";
   list.forEach(c => {
-    let o = document.createElement("option");
-    o.text = c.nama;
-    sel.add(o);
+    const opt = document.createElement("option");
+    opt.value = c.nama;
+    opt.textContent = c.nama;
+    sel.appendChild(opt);
   });
 }
 
 function filterPelanggan() {
-  const q = searchPelanggan.value.toLowerCase();
+  const q = document.getElementById("searchPelanggan").value.toLowerCase();
   const filtered = customers.filter(c =>
     c.nama.toLowerCase().includes(q)
   );
@@ -34,14 +35,15 @@ function generateID() {
   const sel = document.getElementById("idSelect");
   sel.innerHTML = "";
   for (let i = awal; i <= akhir; i++) {
-    let o = document.createElement("option");
-    o.text = i;
-    sel.add(o);
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    sel.appendChild(opt);
   }
 }
 
 function pickup() {
-  let data = JSON.parse(localStorage.getItem(key)) || [];
+  const data = JSON.parse(localStorage.getItem(key)) || [];
   data.push({
     tanggal: new Date().toLocaleDateString(),
     kurir: kurir.value,
@@ -58,13 +60,21 @@ function pickup() {
 }
 
 function selesai() {
-  let data = JSON.parse(localStorage.getItem(key)) || [];
-  let last = data[data.length - 1];
+  const data = JSON.parse(localStorage.getItem(key)) || [];
+  const last = data[data.length - 1];
+  if (!last) return;
+
   last.statusAkhir = "Selesai - " + new Date().toLocaleTimeString();
   last.stamp = "Clear";
   localStorage.setItem(key, JSON.stringify(data));
+
   lokasi.value = "";
   alert("Selesai");
 }
 
-loadCustomers();
+document.addEventListener("DOMContentLoaded", () => {
+  loadCustomers();
+  document
+    .getElementById("searchPelanggan")
+    .addEventListener("keyup", filterPelanggan);
+});
