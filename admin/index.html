@@ -6,56 +6,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  font-family: Arial, Helvetica, sans-serif;
-  background:#f4f6f9;
-  margin:0;
-  padding:20px;
-}
-h1{margin:0;}
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-}
-.clock{font-weight:bold;color:#555;}
+body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;margin:0;padding:20px}
+h1{margin:0}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.clock{font-weight:bold;color:#555}
 
-.controls{
-  margin:15px 0;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-select,input,button{
-  padding:8px 10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  font-size:14px;
-}
+.controls{margin:15px 0;display:flex;gap:10px;flex-wrap:wrap}
+select,input,button{padding:8px 10px;border-radius:6px;border:1px solid #ccc;font-size:14px}
 button{cursor:pointer;border:none}
-
 .btn-show{background:#0d6efd;color:#fff}
 .btn-reset{background:#dc3545;color:#fff;font-weight:bold}
+.btn-excel{background:#198754;color:#fff;font-weight:bold}
 
-table{
-  width:100%;
-  border-collapse:collapse;
+.rekap{
+  display:flex;
+  gap:15px;
+  margin-bottom:15px;
+  flex-wrap:wrap;
+}
+.rekap-box{
   background:#fff;
+  padding:12px 16px;
+  border-radius:8px;
   box-shadow:0 2px 6px rgba(0,0,0,.1);
+  min-width:180px;
 }
-th,td{
-  padding:10px;
-  border-bottom:1px solid #eee;
-  font-size:14px;
-  text-align:left;
-}
-th{
-  background:#1f2937;
-  color:#fff;
-  position:sticky;
-  top:0;
-}
+.rekap-box h3{margin:0 0 6px;font-size:14px;color:#555}
+.rekap-box div{font-size:20px;font-weight:bold}
+
+table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+th,td{padding:10px;border-bottom:1px solid #eee;font-size:14px;text-align:left}
+th{background:#1f2937;color:#fff;position:sticky;top:0}
 tr:nth-child(even){background:#f9fafb}
 
 .status-pickup{color:#f59e0b;font-weight:bold}
@@ -81,9 +62,27 @@ tr:nth-child(even){background:#f9fafb}
   </select>
 
   <input type="date" id="filterTanggal">
+  <input type="month" id="filterBulan">
 
   <button class="btn-show" id="btnTampil">Tampilkan</button>
+  <button class="btn-excel" id="btnExcel">⬇ Export Excel</button>
   <button class="btn-reset" id="btnReset">🔄 Refresh Data</button>
+</div>
+
+<!-- REKAP -->
+<div class="rekap">
+  <div class="rekap-box">
+    <h3>Total Data</h3>
+    <div id="rekapTotal">0</div>
+  </div>
+  <div class="rekap-box">
+    <h3>Pickup</h3>
+    <div id="rekapPickup">0</div>
+  </div>
+  <div class="rekap-box">
+    <h3>Selesai</h3>
+    <div id="rekapSelesai">0</div>
+  </div>
 </div>
 
 <table>
@@ -102,37 +101,34 @@ tr:nth-child(even){background:#f9fafb}
 </thead>
 <tbody id="tbody">
 <tr>
-  <td colspan="9" style="text-align:center;color:#888">
-    Belum ada data
-  </td>
+  <td colspan="9" style="text-align:center;color:#888">Belum ada data</td>
 </tr>
 </tbody>
 </table>
 
 <script>
-/* ===== JAM REALTIME ===== */
+/* JAM */
 function updateClock(){
-  const n = new Date();
-  document.getElementById('clock').innerText =
+  const n=new Date();
+  document.getElementById('clock').innerText=
     n.toLocaleDateString('id-ID')+' '+n.toLocaleTimeString('id-ID');
 }
-setInterval(updateClock,1000); updateClock();
+setInterval(updateClock,1000);updateClock();
 
-/* ===== AMBIL DATA PICKUP ===== */
+/* DATA */
 function getData(){
-  return JSON.parse(localStorage.getItem('pickupData') || '[]');
+  return JSON.parse(localStorage.getItem('pickupData')||'[]');
 }
 
-/* ===== RENDER TABLE ===== */
+/* RENDER */
 function renderTable(data){
-  const tb = document.getElementById('tbody');
+  const tb=document.getElementById('tbody');
   tb.innerHTML='';
-
   if(data.length===0){
     tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#888">Belum ada data</td></tr>';
+    updateRekap([]);
     return;
   }
-
   data.forEach(d=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -148,9 +144,10 @@ function renderTable(data){
     `;
     tb.appendChild(tr);
   });
+  updateRekap(data);
 }
 
-/* ===== SERVICE COLOR ===== */
+/* SERVICE */
 function serviceClass(s){
   if(!s) return 'service-normal';
   s=s.toLowerCase();
@@ -160,7 +157,7 @@ function serviceClass(s){
   return 'service-normal';
 }
 
-/* ===== FILTER ===== */
+/* FILTER KURIR */
 function loadKurir(data){
   const sel=document.getElementById('filterKurir');
   const list=[...new Set(data.map(d=>d.kurir))];
@@ -172,31 +169,57 @@ function loadKurir(data){
   });
 }
 
+/* REKAP */
+function updateRekap(data){
+  document.getElementById('rekapTotal').innerText=data.length;
+  document.getElementById('rekapPickup').innerText=
+    data.filter(d=>d.statusAwal).length;
+  document.getElementById('rekapSelesai').innerText=
+    data.filter(d=>d.statusAkhir).length;
+}
+
+/* TAMPILKAN */
 document.getElementById('btnTampil').onclick=function(){
   const all=getData();
   const fk=document.getElementById('filterKurir').value;
   const ft=document.getElementById('filterTanggal').value;
+  const fb=document.getElementById('filterBulan').value;
 
   const f=all.filter(d=>{
-    return (!fk||d.kurir===fk)&&(!ft||d.tanggal===ft);
+    let ok=true;
+    if(fk) ok&=(d.kurir===fk);
+    if(ft) ok&=(d.tanggal===ft);
+    if(fb) ok&=(d.tanggal&&d.tanggal.startsWith(fb));
+    return ok;
   });
   renderTable(f);
 };
 
-/* ===== REFRESH DATA (HANYA TABEL) ===== */
-document.getElementById('btnReset').onclick=function(){
-  const ok=confirm(
-    'REFRESH DATA TEST\n\n'+
-    'HANYA mengosongkan isi tabel.\n'+
-    'ID Kurir, Nama Kurir, Customers TIDAK TERHAPUS.\n\nLanjutkan?'
-  );
-  if(!ok) return;
-  localStorage.removeItem('pickupData');
-  renderTable([]);
-  alert('Data tabel berhasil dikosongkan.');
+/* EXPORT EXCEL */
+document.getElementById('btnExcel').onclick=function(){
+  const rows=[['Tanggal','Kurir','ID','Pelanggan','Lokasi','Service','Status Awal','Status Akhir','Stamp']];
+  document.querySelectorAll('#tbody tr').forEach(tr=>{
+    const cols=[...tr.children].map(td=>td.innerText);
+    if(cols.length===9 && cols[0]!=='Belum ada data') rows.push(cols);
+  });
+  if(rows.length===1){alert('Tidak ada data untuk diexport');return;}
+
+  let csv=rows.map(r=>r.join('\t')).join('\n');
+  const blob=new Blob([csv],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='rekap-pickup-'+new Date().toISOString().slice(0,10)+'.xls';
+  a.click();
 };
 
-/* ===== AUTO REFRESH REALTIME ===== */
+/* RESET TABEL */
+document.getElementById('btnReset').onclick=function(){
+  if(!confirm('HANYA mengosongkan isi tabel test.\nID & Kurir TIDAK TERHAPUS.\nLanjutkan?'))return;
+  localStorage.removeItem('pickupData');
+  renderTable([]);
+};
+
+/* REALTIME */
 function auto(){
   const d=getData();
   renderTable(d);
