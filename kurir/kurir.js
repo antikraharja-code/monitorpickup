@@ -1,16 +1,31 @@
 const key = "pickupData";
+let customers = [];
 
 function loadCustomers() {
   fetch("../data/customers.json")
     .then(res => res.json())
     .then(data => {
-      const sel = document.getElementById("pelanggan");
-      data.forEach(n => {
-        let o = document.createElement("option");
-        o.text = n;
-        sel.add(o);
-      });
+      customers = data;
+      renderCustomers(data);
     });
+}
+
+function renderCustomers(list) {
+  const sel = document.getElementById("pelanggan");
+  sel.innerHTML = "";
+  list.forEach(c => {
+    let o = document.createElement("option");
+    o.text = c.nama;
+    sel.add(o);
+  });
+}
+
+function filterPelanggan() {
+  const q = searchPelanggan.value.toLowerCase();
+  const filtered = customers.filter(c =>
+    c.nama.toLowerCase().includes(q)
+  );
+  renderCustomers(filtered);
 }
 
 function generateID() {
@@ -48,7 +63,6 @@ function selesai() {
   last.statusAkhir = "Selesai - " + new Date().toLocaleTimeString();
   last.stamp = "Clear";
   localStorage.setItem(key, JSON.stringify(data));
-
   lokasi.value = "";
   alert("Selesai");
 }
