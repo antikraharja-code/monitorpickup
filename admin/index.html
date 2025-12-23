@@ -3,12 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <title>Monitoring Pickup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  padding: 15px;
+  background: #f4f6f8;
+}
+
+h2 {
+  margin-bottom: 10px;
+}
+
+.filter {
+  background: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter select, .filter input, .filter button {
+  padding: 6px;
+}
+
+button {
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th {
+  background: #2c3e50;
+  color: #fff;
+  padding: 8px;
+  font-size: 13px;
+}
+
+td {
+  padding: 8px;
+  font-size: 13px;
+  border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+  background: #f1f1f1;
+}
+
+.status-pickup {
+  background: #fff3cd;
+}
+
+.status-selesai {
+  background: #d4edda;
+}
+
+.rekap {
+  margin-top: 10px;
+  font-weight: bold;
+}
+</style>
 </head>
+
 <body>
 
 <h2>DATA PICKUP KURIR</h2>
 
-<table border="1">
+<div class="filter">
+  <select id="filterKurir">
+    <option value="">Semua Kurir</option>
+  </select>
+
+  <input type="date" id="tglAwal">
+  <input type="date" id="tglAkhir">
+
+  <button onclick="renderTable()">Tampilkan</button>
+  <button onclick="rekapHarian()">Rekap Harian</button>
+  <button onclick="rekapBulanan()">Rekap Bulanan</button>
+</div>
+
+<table>
 <thead>
 <tr>
 <th>Tanggal</th>
@@ -24,6 +105,8 @@
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+
+<div class="rekap" id="rekap"></div>
 
 <script src="admin.js"></script>
 </body>
