@@ -2,45 +2,86 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Form Kurir</title>
+<title>Form Input Kurir</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+}
+label {
+  font-weight: bold;
+}
+input, select, textarea, button {
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  padding: 6px;
+}
+button {
+  cursor: pointer;
+}
+.row {
+  display: flex;
+  gap: 10px;
+}
+.row > div {
+  flex: 1;
+}
+</style>
 </head>
+
 <body>
 
 <h2>FORM INPUT KURIR</h2>
 
-<label>Nama Kurir</label><br>
-<input type="text" id="kurir"><br><br>
+<label>Nama Kurir</label>
+<input type="text" id="kurir" placeholder="Nama Kurir">
 
-<label>ID Awal</label><br>
-<input type="number" id="idAwal"><br>
-
-<label>ID Akhir</label><br>
-<input type="number" id="idAkhir"><br><br>
+<div class="row">
+  <div>
+    <label>ID Awal</label>
+    <input type="number" id="idAwal">
+  </div>
+  <div>
+    <label>ID Akhir</label>
+    <input type="number" id="idAkhir">
+  </div>
+</div>
 
 <button onclick="generateID()">Simpan & Generate ID</button>
 
 <hr>
 
-<label>ID</label><br>
-<select id="idSelect"></select><br><br>
+<label>ID Pelanggan</label>
+<select id="idSelect"></select>
 
-<label>Pelanggan</label><br>
-<select id="pelanggan"></select><br><br>
+<label>Ketik 4 Huruf Pelanggan</label>
+<input type="text" id="searchPelanggan" maxlength="4" placeholder="contoh: astr">
 
-<label>Lokasi Pickup</label><br>
-<textarea id="lokasi"></textarea><br><br>
+<label>Pelanggan</label>
+<select id="pelanggan"></select>
 
-<label>Service</label><br>
+<label>Lokasi Pickup</label>
+<textarea id="lokasi" rows="3"></textarea>
+
+<label>Service</label>
 <select id="service">
   <option>Normal</option>
   <option>Urgent</option>
   <option>Top Urg</option>
   <option>Premium</option>
-</select><br><br>
+</select>
 
-<button onclick="pickup()">Pickup</button>
-<button onclick="selesai()">Selesai</button>
+<div class="row">
+  <div>
+    <button onclick="pickup()">Pickup</button>
+  </div>
+  <div>
+    <button onclick="selesai()">Selesai</button>
+  </div>
+</div>
 
 <script src="kurir.js"></script>
 </body>
