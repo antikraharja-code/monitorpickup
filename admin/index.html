@@ -2,112 +2,209 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Monitoring Pickup</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADMIN - Monitoring Pickup Kurir</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  padding: 15px;
-  background: #f4f6f8;
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  background:#f4f6f9;
+  margin:0;
+  padding:20px;
 }
+h1{margin:0;}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.clock{font-weight:bold;color:#555;}
 
-h2 {
-  margin-bottom: 10px;
+.controls{
+  margin:15px 0;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
+select,input,button{
+  padding:8px 10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+button{cursor:pointer;border:none}
 
-.filter {
-  background: #fff;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 15px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+.btn-show{background:#0d6efd;color:#fff}
+.btn-reset{background:#dc3545;color:#fff;font-weight:bold}
 
-.filter select, .filter input, .filter button {
-  padding: 6px;
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
 }
+th,td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+  text-align:left;
+}
+th{
+  background:#1f2937;
+  color:#fff;
+  position:sticky;
+  top:0;
+}
+tr:nth-child(even){background:#f9fafb}
 
-button {
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-}
-
-th {
-  background: #2c3e50;
-  color: #fff;
-  padding: 8px;
-  font-size: 13px;
-}
-
-td {
-  padding: 8px;
-  font-size: 13px;
-  border-bottom: 1px solid #ddd;
-}
-
-tr:hover {
-  background: #f1f1f1;
-}
-
-.status-pickup {
-  background: #fff3cd;
-}
-
-.status-selesai {
-  background: #d4edda;
-}
-
-.rekap {
-  margin-top: 10px;
-  font-weight: bold;
-}
+.status-pickup{color:#f59e0b;font-weight:bold}
+.status-selesai{color:#16a34a;font-weight:bold}
+.service-normal{color:#374151}
+.service-urgent{color:#dc2626;font-weight:bold}
+.service-top{color:#9333ea;font-weight:bold}
+.service-premium{color:#2563eb;font-weight:bold}
+.stamp{color:#16a34a;font-weight:bold}
 </style>
 </head>
 
 <body>
 
-<h2>DATA PICKUP KURIR</h2>
+<div class="header">
+  <h1>📦 ADMIN – Monitoring Pickup Kurir</h1>
+  <div class="clock" id="clock"></div>
+</div>
 
-<div class="filter">
+<div class="controls">
   <select id="filterKurir">
-    <option value="">Semua Kurir</option>
+    <option value="">Filter Kurir</option>
   </select>
 
-  <input type="date" id="tglAwal">
-  <input type="date" id="tglAkhir">
+  <input type="date" id="filterTanggal">
 
-  <button onclick="renderTable()">Tampilkan</button>
-  <button onclick="rekapHarian()">Rekap Harian</button>
-  <button onclick="rekapBulanan()">Rekap Bulanan</button>
+  <button class="btn-show" id="btnTampil">Tampilkan</button>
+  <button class="btn-reset" id="btnReset">🔄 Refresh Data</button>
 </div>
 
 <table>
 <thead>
 <tr>
-<th>Tanggal</th>
-<th>Kurir</th>
-<th>ID</th>
-<th>Pelanggan</th>
-<th>Lokasi</th>
-<th>Service</th>
-<th>Status Awal</th>
-<th>Status Akhir</th>
-<th>Stamp</th>
+  <th>Tanggal</th>
+  <th>Kurir</th>
+  <th>ID</th>
+  <th>Pelanggan</th>
+  <th>Lokasi Pickup</th>
+  <th>Service</th>
+  <th>Status Awal</th>
+  <th>Status Akhir</th>
+  <th>Stamp</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="tbody">
+<tr>
+  <td colspan="9" style="text-align:center;color:#888">
+    Belum ada data
+  </td>
+</tr>
+</tbody>
 </table>
 
-<div class="rekap" id="rekap"></div>
+<script>
+/* ===== JAM REALTIME ===== */
+function updateClock(){
+  const n = new Date();
+  document.getElementById('clock').innerText =
+    n.toLocaleDateString('id-ID')+' '+n.toLocaleTimeString('id-ID');
+}
+setInterval(updateClock,1000); updateClock();
 
-<script src="admin.js"></script>
+/* ===== AMBIL DATA PICKUP ===== */
+function getData(){
+  return JSON.parse(localStorage.getItem('pickupData') || '[]');
+}
+
+/* ===== RENDER TABLE ===== */
+function renderTable(data){
+  const tb = document.getElementById('tbody');
+  tb.innerHTML='';
+
+  if(data.length===0){
+    tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#888">Belum ada data</td></tr>';
+    return;
+  }
+
+  data.forEach(d=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${d.tanggal||''}</td>
+      <td>${d.kurir||''}</td>
+      <td>${d.id||''}</td>
+      <td>${d.pelanggan||''}</td>
+      <td>${d.lokasi||''}</td>
+      <td class="${serviceClass(d.service)}">${d.service||''}</td>
+      <td class="status-pickup">${d.statusAwal||''}</td>
+      <td class="status-selesai">${d.statusAkhir||''}</td>
+      <td class="stamp">${d.statusAkhir?'Clear':''}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+/* ===== SERVICE COLOR ===== */
+function serviceClass(s){
+  if(!s) return 'service-normal';
+  s=s.toLowerCase();
+  if(s.includes('urgent')) return 'service-urgent';
+  if(s.includes('top')) return 'service-top';
+  if(s.includes('premium')) return 'service-premium';
+  return 'service-normal';
+}
+
+/* ===== FILTER ===== */
+function loadKurir(data){
+  const sel=document.getElementById('filterKurir');
+  const list=[...new Set(data.map(d=>d.kurir))];
+  sel.innerHTML='<option value="">Filter Kurir</option>';
+  list.forEach(k=>{
+    const o=document.createElement('option');
+    o.value=k;o.textContent=k;
+    sel.appendChild(o);
+  });
+}
+
+document.getElementById('btnTampil').onclick=function(){
+  const all=getData();
+  const fk=document.getElementById('filterKurir').value;
+  const ft=document.getElementById('filterTanggal').value;
+
+  const f=all.filter(d=>{
+    return (!fk||d.kurir===fk)&&(!ft||d.tanggal===ft);
+  });
+  renderTable(f);
+};
+
+/* ===== REFRESH DATA (HANYA TABEL) ===== */
+document.getElementById('btnReset').onclick=function(){
+  const ok=confirm(
+    'REFRESH DATA TEST\n\n'+
+    'HANYA mengosongkan isi tabel.\n'+
+    'ID Kurir, Nama Kurir, Customers TIDAK TERHAPUS.\n\nLanjutkan?'
+  );
+  if(!ok) return;
+  localStorage.removeItem('pickupData');
+  renderTable([]);
+  alert('Data tabel berhasil dikosongkan.');
+};
+
+/* ===== AUTO REFRESH REALTIME ===== */
+function auto(){
+  const d=getData();
+  renderTable(d);
+  loadKurir(d);
+}
+setInterval(auto,2000);
+auto();
+</script>
+
 </body>
 </html>
