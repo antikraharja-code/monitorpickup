@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Pickup Kurir</title>
+<style>
+body{font-family:Arial;padding:10px}
+input,select,textarea,button{width:100%;padding:8px;margin:5px 0}
+button{font-weight:bold}
+</style>
+</head>
+<body>
+
+<h3>STOK ID KURIR</h3>
+<input id="namaKurir" placeholder="Nama Kurir">
+<input id="idAwal" type="number" placeholder="ID Awal">
+<input id="idAkhir" type="number" placeholder="ID Akhir">
+<button onclick="generateID()">SIMPAN & GENERATE ID</button>
+
+<hr>
+
+<h3>FORM PICKUP</h3>
+<input id="tanggal" readonly>
+<select id="idPelanggan"></select>
+
+<input id="searchCustomer" placeholder="Ketik 4 huruf pelanggan">
+<select id="pelanggan"></select>
+
+<textarea id="lokasi" placeholder="Lokasi Pickup"></textarea>
+
+<select id="service">
+  <option>NORMAL</option>
+  <option>URGENT</option>
+  <option>TOP URGENT</option>
+  <option>PREMIUM</option>
+</select>
+
+<select id="status">
+  <option>PICKUP</option>
+  <option>SELESAI</option>
+</select>
+
+<button onclick="simpan()">SIMPAN</button>
+
+<script>
+const now = new Date();
+tanggal.value = now.toLocaleString();
+
+let stok = JSON.parse(localStorage.getItem("stok_id")||"{}");
+let pickup = JSON.parse(localStorage.getItem("pickup")||"[]");
+
+function generateID(){
+  const awal = parseInt(idAwal.value);
+  const akhir = parseInt(idAkhir.value);
+  stok = {
+    kurir: namaKurir.value,
+    tersedia: []
+  };
+  for(let i=awal;i<=akhir;i++) stok.tersedia.push(i);
+  localStorage.setItem("stok_id",JSON.stringify(stok));
+  loadID();
+}
+
+function loadID(){
+  idPelanggan.innerHTML="";
+  (stok.tersedia||[]).forEach(i=>{
+    idPelanggan.innerHTML+=`<option>${i}</option>`;
+  });
+}
+loadID();
+
+fetch("../data/customers.json")
+.then(r=>r.json())
+.then(data=>{
+  searchCustomer.oninput=()=>{
+    pelanggan.innerHTML="";
+    if(searchCustomer.value.length<4)return;
+    data.filter(d=>d.nama.toLowerCase().includes(searchCustomer.value.toLowerCase()))
+    .forEach(d=>{
+      pelanggan.innerHTML+=`<option>${d.nama}</option>`;
+    });
+  }
+});
+
+function simpan(){
+  const data={
+    tgl: new Date().toLocaleDateString(),
+    jam: new Date().toLocaleTimeString(),
+    kurir: stok.kurir,
+    id: idPelanggan.value,
+    pelanggan: pelanggan.value,
+    lokasi: lokasi.value,
+    service: service.value,
+    pickup: status.value==="PICKUP"?"✔":"",
+    selesai: status.value==="SELESAI"?"✔":"",
+    stamp: new Date().toLocaleTimeString()
+  };
+
+  pickup.push(data);
+
+  if(status.value==="SELESAI"){
+    stok.tersedia = stok.tersedia.filter(i=>i!=idPelanggan.value);
+    localStorage.setItem("stok_id",JSON.stringify(stok));
+    document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+    loadID();
+  }
+
+  localStorage.setItem("pickup",JSON.stringify(pickup));
+  alert("Tersimpan");
+}
+</script>
+</body>
+</html>
